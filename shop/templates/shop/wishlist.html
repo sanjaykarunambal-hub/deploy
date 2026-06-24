@@ -1,0 +1,52 @@
+{% extends "shop/base.html" %}
+{% load static %}
+
+{% block title %}Your Wishlist — VOLT Electronics{% endblock %}
+
+{% block content %}
+<section class="container my-5">
+  <h2 class="mb-4">Your Wishlist</h2>
+  <div class="row g-4">
+    {% for product in products %}
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+      <div class="product-card">
+        <div class="product-thumb">
+          <form method="post" action="{% url 'shop:wishlist_toggle' product.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'shop:wishlist' %}">
+            <button type="submit" class="wishlist-btn active" aria-label="Remove from wishlist">
+              <i class="bi bi-heart-fill"></i>
+            </button>
+          </form>
+          <a href="{% url 'shop:product_detail' product.id %}"><img src="{% static product.image %}" alt="{{ product.name }}"></a>
+        </div>
+        <div class="product-body">
+          <p class="product-cat">{{ product.get_category_display }}</p>
+          <h3 class="product-title"><a href="{% url 'shop:product_detail' product.id %}">{{ product.name }}</a></h3>
+          <div class="product-footer">
+            <span class="price">${{ product.price|floatformat:2 }}</span>
+            <form method="post" action="{% url 'shop:cart_add' product.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="quantity" value="1">
+              <input type="hidden" name="next" value="{% url 'shop:wishlist' %}">
+              <button type="submit" class="add-btn" aria-label="Add {{ product.name }} to cart">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="no-results">
+        <i class="bi bi-heart"></i>
+        <h5>Your wishlist is empty</h5>
+        <p>Tap the heart icon on any product to save it here.</p>
+        <a href="{% url 'shop:home' %}" class="btn btn-accent mt-2">Browse products</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

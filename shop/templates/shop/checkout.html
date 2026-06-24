@@ -1,0 +1,92 @@
+{% extends "shop/base.html" %}
+{% load static %}
+
+{% block title %}Checkout — VOLT Electronics{% endblock %}
+
+{% block content %}
+<section class="container my-5">
+  <h2 class="mb-4">Checkout</h2>
+
+  <div class="row g-5">
+    <div class="col-lg-5 order-lg-2">
+      <h5 class="mb-3">Order Summary</h5>
+      {% if cart_items %}
+        <ul class="list-group mb-3">
+          {% for item in cart_items %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ item.product.name }} <span class="text-muted">× {{ item.quantity }}</span></span>
+            <span class="fw-semibold">${{ item.line_total|floatformat:2 }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted">Your cart is empty. <a href="{% url 'shop:home' %}">Go shopping</a>.</p>
+      {% endif %}
+      <div class="p-3" style="background:#fff; border:1px solid var(--line); border-radius:10px;">
+        <div class="cart-summary-row"><span>Subtotal</span><span>${{ subtotal|floatformat:2 }}</span></div>
+        <div class="cart-summary-row">
+          <span>Shipping</span>
+          <span>{% if shipping == 0 %}Free{% else %}${{ shipping|floatformat:2 }}{% endif %}</span>
+        </div>
+        <div class="cart-summary-row total"><span>Total</span><span>${{ total|floatformat:2 }}</span></div>
+      </div>
+    </div>
+
+    <div class="col-lg-7 order-lg-1">
+      <form method="post" action="{% url 'shop:checkout' %}" novalidate>
+        {% csrf_token %}
+        <h5 class="mb-3">Shipping Details</h5>
+        <div class="row g-3 mb-2">
+          <div class="col-md-6">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control {% if errors.full_name %}is-invalid{% endif %}" value="{{ form_data.full_name|default:'' }}">
+            {% if errors.full_name %}<div class="invalid-feedback">{{ errors.full_name }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control {% if errors.email %}is-invalid{% endif %}" value="{{ form_data.email|default:'' }}">
+            {% if errors.email %}<div class="invalid-feedback">{{ errors.email }}</div>{% endif %}
+          </div>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Address</label>
+          <textarea name="address" class="form-control {% if errors.address %}is-invalid{% endif %}" rows="2">{{ form_data.address|default:'' }}</textarea>
+          {% if errors.address %}<div class="invalid-feedback">{{ errors.address }}</div>{% endif %}
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">City</label>
+            <input type="text" name="city" class="form-control {% if errors.city %}is-invalid{% endif %}" value="{{ form_data.city|default:'' }}">
+            {% if errors.city %}<div class="invalid-feedback">{{ errors.city }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">PIN / ZIP Code</label>
+            <input type="text" name="zip_code" class="form-control {% if errors.zip_code %}is-invalid{% endif %}" value="{{ form_data.zip_code|default:'' }}">
+            {% if errors.zip_code %}<div class="invalid-feedback">{{ errors.zip_code }}</div>{% endif %}
+          </div>
+        </div>
+
+        <h5 class="mb-3 mt-4">Payment Method</h5>
+        <div class="d-flex gap-3 mb-4 flex-wrap">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="payment_method" id="payCod" value="cod" {% if form_data.payment_method != "card" and form_data.payment_method != "upi" %}checked{% endif %}>
+            <label class="form-check-label" for="payCod">Cash on Delivery</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="payment_method" id="payCard" value="card" {% if form_data.payment_method == "card" %}checked{% endif %}>
+            <label class="form-check-label" for="payCard">Credit / Debit Card</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="payment_method" id="payUpi" value="upi" {% if form_data.payment_method == "upi" %}checked{% endif %}>
+            <label class="form-check-label" for="payUpi">UPI</label>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-accent w-100" {% if not cart_items %}disabled{% endif %}>
+          <i class="bi bi-lock-fill me-1"></i> Place Order
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

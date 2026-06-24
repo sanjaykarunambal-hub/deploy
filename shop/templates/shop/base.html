@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}VOLT Electronics{% endblock %}</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg">
+  <div class="container gap-3">
+    <a class="brand" href="{% url 'shop:home' %}"><span class="bolt">⚡</span>VOLT</a>
+
+    <form class="nav-search" method="get" action="{% url 'shop:home' %}">
+      <input type="text" name="q" value="{{ search|default:'' }}" placeholder="Search headphones, laptops, watches...">
+      <i class="bi bi-search"></i>
+    </form>
+
+    <div class="d-flex gap-2 ms-auto">
+      <a href="{% url 'shop:wishlist' %}" class="nav-icon-btn" aria-label="Wishlist">
+        <i class="bi bi-heart"></i>
+        <span class="icon-badge" id="wishlistBadge" {% if not wishlist_count %}style="display:none;"{% endif %}>{{ wishlist_count|default:0 }}</span>
+      </a>
+      <button class="nav-icon-btn" data-bs-toggle="offcanvas" data-bs-target="#cartDrawer" aria-label="Cart">
+        <i class="bi bi-cart3"></i>
+        <span class="icon-badge" id="cartBadge" {% if not cart_count %}style="display:none;"{% endif %}>{{ cart_count|default:0 }}</span>
+      </button>
+    </div>
+  </div>
+</nav>
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastStack" style="z-index:1080;">
+  {% for message in messages %}
+    <div class="toast align-items-center show fade-up mb-2" role="alert">
+      <div class="d-flex">
+        <div class="toast-body">
+          {% if message.tags == 'error' %}
+            <i class="bi bi-x-circle-fill text-danger me-2"></i>
+          {% elif message.tags == 'success' %}
+            <i class="bi bi-check-circle-fill text-success me-2"></i>
+          {% else %}
+            <i class="bi bi-info-circle-fill text-primary me-2"></i>
+          {% endif %}
+          {{ message }}
+        </div>
+        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% block content %}{% endblock %}
+<footer class="footer">
+  <div class="container footer-grid">
+    <div>
+      <a class="brand" href="{% url 'shop:home' %}" style="margin-bottom:0.8rem; display:inline-flex;"><span class="bolt">⚡</span>VOLT</a>
+      <p style="color:#a9aec6; font-size:0.9rem;">Electronics that earn their spec sheet. Tested at full load before they ship.</p>
+    </div>
+    <div>
+      <h6>Shop</h6>
+      <a href="{% url 'shop:home' %}?category=audio">Audio</a>
+      <a href="{% url 'shop:home' %}?category=wearables">Wearables</a>
+      <a href="{% url 'shop:home' %}?category=computing">Computing</a>
+      <a href="{% url 'shop:home' %}?category=power">Power</a>
+    </div>
+    <div>
+      <h6>Support</h6>
+      <a href="{% url 'shop:contact' %}">Contact us</a>
+      <a href="{% url 'shop:cart' %}">Your cart</a>
+      <a href="{% url 'shop:wishlist' %}">Wishlist</a>
+    </div>
+    <div>
+      <h6>Stay in the loop</h6>
+      <p style="font-size:0.9rem; margin-bottom:0;">Get restock alerts and deals. No spam.</p>
+      <form class="newsletter-form" id="newsletterForm">
+        <input type="email" placeholder="you@email.com" id="newsletterEmail" required>
+        <button type="submit" aria-label="Subscribe"><i class="bi bi-arrow-right"></i></button>
+      </form>
+      <p class="newsletter-success" id="newsletterSuccess"><i class="bi bi-check-circle-fill"></i> You're subscribed!</p>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>© 2026 VOLT Electronics. All rights reserved.</span>
+    <div class="footer-socials">
+      <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+      <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+      <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+    </div>
+  </div>
+</footer>
+<div class="offcanvas offcanvas-end cart-drawer" tabindex="-1" id="cartDrawer">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title"><i class="bi bi-cart3"></i> Your Cart</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column">
+    <div class="flex-grow-1">
+      {% if drawer_cart_items %}
+        {% for item in drawer_cart_items %}
+        <div class="cart-row">
+          <img src="{% static item.product.image %}" alt="{{ item.product.name }}">
+          <div class="cart-row-info">
+            <h6>{{ item.product.name }}</h6>
+            <span class="price">${{ item.line_total|floatformat:2 }}</span>
+            <form method="post" action="{% url 'shop:cart_change_qty' item.product.id %}" class="qty-stepper mt-1 d-inline">
+              {% csrf_token %}
+              <button type="submit" name="amount" value="-1">−</button>
+              <span>{{ item.quantity }}</span>
+              <button type="submit" name="amount" value="1">+</button>
+            </form>
+          </div>
+          <form method="post" action="{% url 'shop:cart_remove' item.product.id %}">
+            {% csrf_token %}
+            <button class="remove-btn" type="submit" aria-label="Remove {{ item.product.name }}">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="cart-empty">
+          <i class="bi bi-cart-x"></i>
+          <p>Your cart is empty.</p>
+        </div>
+      {% endif %}
+    </div>
+    <div class="cart-summary">
+      <div class="cart-summary-row total"><span>Total</span><span>${{ drawer_cart_total|default:"0.00"|floatformat:2 }}</span></div>
+      <a href="{% url 'shop:cart' %}" class="btn btn-outline-accent w-100 mb-2">View Cart</a>
+      <a href="{% url 'shop:checkout' %}" class="btn btn-accent w-100">Checkout</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

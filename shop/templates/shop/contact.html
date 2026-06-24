@@ -1,0 +1,46 @@
+{% extends "shop/base.html" %}
+{% load static %}
+
+{% block title %}Contact Us — VOLT Electronics{% endblock %}
+
+{% block content %}
+<section class="container my-5">
+  <h2 class="mb-4">Contact Us</h2>
+  <div class="row g-5">
+    <div class="col-md-5">
+      <p class="text-muted">Have a question about an order or a product? Send a message and we'll get back to you within 24 hours.</p>
+      <p><i class="bi bi-envelope me-2"></i>support@voltelectronics.com</p>
+      <p><i class="bi bi-telephone me-2"></i>+91 98765 43210</p>
+      <p><i class="bi bi-geo-alt me-2"></i>123 Circuit Street, Salem, Tamil Nadu, India</p>
+    </div>
+
+    <div class="col-md-7">
+      {% if sent %}
+        <div class="alert alert-success">
+          <i class="bi bi-check-circle-fill me-1"></i> Thanks! Your message has been sent.
+        </div>
+      {% else %}
+        <form method="post" action="{% url 'shop:contact' %}" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-control {% if errors.name %}is-invalid{% endif %}" value="{{ request.POST.name|default:'' }}">
+            {% if errors.name %}<div class="invalid-feedback">{{ errors.name }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control {% if errors.email %}is-invalid{% endif %}" value="{{ request.POST.email|default:'' }}">
+            {% if errors.email %}<div class="invalid-feedback">{{ errors.email }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Message</label>
+            <textarea name="message" class="form-control {% if errors.message %}is-invalid{% endif %}" rows="4">{{ request.POST.message|default:'' }}</textarea>
+            {% if errors.message %}<div class="invalid-feedback">{{ errors.message }}</div>{% endif %}
+          </div>
+          <button type="submit" class="btn btn-accent">Send Message</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

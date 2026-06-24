@@ -1,0 +1,112 @@
+{% extends "shop/base.html" %}
+{% load static %}
+
+{% block title %}{{ product.name }} — VOLT Electronics{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb-bar">
+  <div class="container">
+    <a href="{% url 'shop:home' %}">Home</a> <i class="bi bi-chevron-right small mx-1"></i> <span class="current">{{ product.name }}</span>
+  </div>
+</div>
+
+<section class="container my-5">
+  <div class="row g-5">
+    <div class="col-md-6">
+      <div class="detail-thumb">
+        <img src="{% static product.image %}" alt="{{ product.name }}">
+      </div>
+    </div>
+    <div class="col-md-6">
+      <p class="product-cat">{{ product.get_category_display }}</p>
+      <h1 style="font-size:1.8rem;">{{ product.name }}</h1>
+      <p class="product-rating mb-2">{{ product.star_string }} <span>({{ product.reviews }} reviews)</span></p>
+      <p class="mb-3">
+        <span class="price" style="font-size:1.6rem;">${{ product.price|floatformat:2 }}</span>
+        {% if product.old_price %}<span class="price-old">${{ product.old_price|floatformat:2 }}</span>{% endif %}
+      </p>
+      <span class="badge-stock {% if product.stock_status == 'in' %}in{% else %}low{% endif %}" style="position:static; display:inline-block; margin-bottom:1rem;">
+        {% if product.stock_status == 'in' %}In stock{% else %}Only a few left{% endif %}
+      </span>
+      <p class="text-muted">{{ product.description }}</p>
+
+      <form method="post" action="{% url 'shop:cart_add' product.id %}" class="d-flex align-items-center gap-3 my-4">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'shop:product_detail' product.id %}">
+        <span class="fw-semibold">Quantity</span>
+        <div class="qty-stepper">
+          <button type="button" id="qtyMinus" aria-label="Decrease quantity">−</button>
+          <span id="qtyValue">1</span>
+          <button type="button" id="qtyPlus" aria-label="Increase quantity">+</button>
+        </div>
+        <input type="hidden" name="quantity" id="qtyInput" value="1">
+
+        <div class="d-flex gap-2 ms-auto">
+          <button type="submit" class="btn btn-accent">
+            <i class="bi bi-cart-plus me-1"></i> Add to Cart
+          </button>
+        </div>
+      </form>
+
+      <form method="post" action="{% url 'shop:wishlist_toggle' product.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'shop:product_detail' product.id %}">
+        <button type="submit" class="wishlist-btn {% if is_wishlisted %}active{% endif %}" style="position:static; width:48px; height:48px; background:#f3f5fb;">
+          <i class="bi bi-heart-fill"></i>
+        </button>
+        <span class="text-muted small ms-2">{% if is_wishlisted %}Saved to wishlist{% else %}Save to wishlist{% endif %}</span>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section class="container mb-5">
+  <h2 class="mb-4" style="font-size:1.4rem;">You might also like</h2>
+  <div class="row g-4">
+    {% for p in related %}
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="product-card">
+        <div class="product-thumb">
+          <a href="{% url 'shop:product_detail' p.id %}"><img src="{% static p.image %}" alt="{{ p.name }}"></a>
+        </div>
+        <div class="product-body">
+          <h3 class="product-title"><a href="{% url 'shop:product_detail' p.id %}">{{ p.name }}</a></h3>
+          <div class="product-footer">
+            <span class="price">${{ p.price|floatformat:2 }}</span>
+            <form method="post" action="{% url 'shop:cart_add' p.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="quantity" value="1">
+              <input type="hidden" name="next" value="{% url 'shop:product_detail' product.id %}">
+              <button type="submit" class="add-btn" aria-label="Add {{ p.name }} to cart">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-muted">No related products yet.</p>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    let qty = 1;
+    const valueEl = document.getElementById("qtyValue");
+    const inputEl = document.getElementById("qtyInput");
+
+    document.getElementById("qtyMinus").addEventListener("click", function () {
+      if (qty > 1) { qty -= 1; valueEl.innerText = qty; inputEl.value = qty; }
+    });
+    document.getElementById("qtyPlus").addEventListener("click", function () {
+      qty += 1; valueEl.innerText = qty; inputEl.value = qty;
+    });
+  })();
+</script>
+{% endblock %}

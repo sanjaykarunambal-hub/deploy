@@ -1,0 +1,147 @@
+{% extends "shop/base.html" %}
+{% load static %}
+
+{% block title %}VOLT Electronics — Home{% endblock %}
+
+{% block content %}
+<header class="hero">
+  <div class="container hero-grid">
+    <div>
+      <span class="hero-eyebrow"><span class="pulse-dot"></span> 4,200+ orders shipped this month</span>
+      <h1>Power up with the<br>right gear.</h1>
+      <p>Headphones, wearables, laptops and accessories — tested, in stock, and ready to ship today.</p>
+      <div class="hero-actions">
+        <a href="#shop" class="btn btn-accent">Shop Now</a>
+        <a href="#trust" class="btn btn-outline-accent" style="border-color:rgba(255,255,255,0.3); color:#fff;">Why VOLT?</a>
+      </div>
+      <div class="hero-stats">
+        <div><span class="hero-stat-num">12.4k</span><span class="hero-stat-label">Happy customers</span></div>
+        <div><span class="hero-stat-num">4.6★</span><span class="hero-stat-label">Average rating</span></div>
+        <div><span class="hero-stat-num">24h</span><span class="hero-stat-label">Dispatch time</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card">
+        <img src="{% static 'images/headphones.svg' %}" alt="Aero Wireless Headphones">
+        <div class="hero-card-meta">
+          <span class="price">$49.99</span>
+          <span class="hero-card-badge">Best Seller</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<section class="container my-5" id="shop">
+  <div class="section-head">
+    <div>
+      <h2>All products</h2>
+      <p class="result-count">
+        {{ result_count }} product{{ result_count|pluralize }} found
+        {% if search %}for "<strong>{{ search }}</strong>"{% endif %}
+      </p>
+    </div>
+    <div class="toolbar">
+      <form method="get" id="sortForm">
+        {% if search %}<input type="hidden" name="q" value="{{ search }}">{% endif %}
+        {% if active_category != "all" %}<input type="hidden" name="category" value="{{ active_category }}">{% endif %}
+        <select name="sort" class="sort-select" onchange="document.getElementById('sortForm').submit()">
+          <option value="default" {% if sort == "default" %}selected{% endif %}>Sort: Featured</option>
+          <option value="price-asc" {% if sort == "price-asc" %}selected{% endif %}>Price: Low to High</option>
+          <option value="price-desc" {% if sort == "price-desc" %}selected{% endif %}>Price: High to Low</option>
+          <option value="rating" {% if sort == "rating" %}selected{% endif %}>Rating</option>
+        </select>
+      </form>
+    </div>
+  </div>
+
+  <div class="toolbar mb-4">
+    <a class="chip {% if active_category == 'all' %}active{% endif %}" href="?{% if search %}q={{ search }}&{% endif %}category=all{% if sort != 'default' %}&sort={{ sort }}{% endif %}">All</a>
+    <a class="chip {% if active_category == 'audio' %}active{% endif %}" href="?{% if search %}q={{ search }}&{% endif %}category=audio{% if sort != 'default' %}&sort={{ sort }}{% endif %}">Audio</a>
+    <a class="chip {% if active_category == 'wearables' %}active{% endif %}" href="?{% if search %}q={{ search }}&{% endif %}category=wearables{% if sort != 'default' %}&sort={{ sort }}{% endif %}">Wearables</a>
+    <a class="chip {% if active_category == 'computing' %}active{% endif %}" href="?{% if search %}q={{ search }}&{% endif %}category=computing{% if sort != 'default' %}&sort={{ sort }}{% endif %}">Computing</a>
+    <a class="chip {% if active_category == 'power' %}active{% endif %}" href="?{% if search %}q={{ search }}&{% endif %}category=power{% if sort != 'default' %}&sort={{ sort }}{% endif %}">Power</a>
+  </div>
+
+  <div class="row g-4">
+    {% for product in products %}
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3 fade-up">
+      <div class="product-card">
+        <div class="product-thumb">
+          <span class="badge-stock {% if product.stock_status == 'in' %}in{% else %}low{% endif %}">
+            {% if product.stock_status == 'in' %}In stock{% else %}Low stock{% endif %}
+          </span>
+          <form method="post" action="{% url 'shop:wishlist_toggle' product.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button type="submit" class="wishlist-btn {% if product.id|stringformat:'s' in wishlist_ids %}active{% endif %}" aria-label="Toggle wishlist">
+              <i class="bi bi-heart-fill"></i>
+            </button>
+          </form>
+          <a href="{% url 'shop:product_detail' product.id %}"><img src="{% static product.image %}" alt="{{ product.name }}"></a>
+        </div>
+        <div class="product-body">
+          <p class="product-cat">{{ product.get_category_display }}</p>
+          <h3 class="product-title"><a href="{% url 'shop:product_detail' product.id %}">{{ product.name }}</a></h3>
+          <p class="product-rating">{{ product.star_string }}<span>({{ product.reviews }})</span></p>
+          <div class="product-footer">
+            <span>
+              <span class="price">${{ product.price|floatformat:2 }}</span>
+              {% if product.old_price %}<span class="price-old">${{ product.old_price|floatformat:2 }}</span>{% endif %}
+            </span>
+            <form method="post" action="{% url 'shop:cart_add' product.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="quantity" value="1">
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="add-btn" aria-label="Add {{ product.name }} to cart">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="no-results">
+        <i class="bi bi-search"></i>
+        <h5>No products match your search</h5>
+        <p>Try a different keyword or clear the category filter.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ===== TRUST STRIP ===== -->
+<section class="trust-strip" id="trust">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-6 col-md-3">
+        <div class="trust-item">
+          <span class="trust-icon"><i class="bi bi-shield-check"></i></span>
+          <div><h6>2-Year Warranty</h6><p>On every item</p></div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="trust-item">
+          <span class="trust-icon"><i class="bi bi-arrow-repeat"></i></span>
+          <div><h6>30-Day Returns</h6><p>No questions asked</p></div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="trust-item">
+          <span class="trust-icon"><i class="bi bi-truck"></i></span>
+          <div><h6>Fast Dispatch</h6><p>Ships within 24h</p></div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="trust-item">
+          <span class="trust-icon"><i class="bi bi-headset"></i></span>
+          <div><h6>Support 24/7</h6><p>We're here to help</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
